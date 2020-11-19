@@ -1,14 +1,14 @@
 <template>
   <div id="content">
     <h2>Face mask</h2>
-			<div id="container">
-				<video id="videoel" width="400" height="300" preload="auto" playsinline autoplay>
+			<div id="container" class="w-full">
+				<video id="videoel" class="w-full" height="300" preload="auto" playsinline autoplay>
 				</video>
-				<canvas id="overlay" width="400" height="300"></canvas>
-				<canvas id="webgl" width="400" height="300"></canvas>
+				<canvas id="overlay" class="w-full" height="300"></canvas>
+				<canvas id="webgl" class="w-full" height="300"></canvas>
 			</div>
 			<br/>
-			<input class="btn" type="button" value="wait, loading video" disabled="disabled" @click="startVideo()" id="startbutton"></input>
+			<input class="btn p-2 border border-gray-600 rounded-lg bg-green-500 text-white text-lg font-semibold" type="button" value="wait, loading video" disabled="disabled" @click="startVideo()" id="startbutton"></input>
 			<select name="mask" id="selectmask">
 				<option value="0">Average face</option>
 				<option value="1">Mona Lisa</option>
@@ -18,7 +18,7 @@
 				<option value="5">Audrey</option>
 				<option value="6">Cage</option>
 			</select>
-			<div id="text">
+			<!-- <div id="text">
 				<p>This is an example of face masking using the javascript library <a href="https://github.com/auduno/clmtrackr"><em>clmtrackr</em></a>.</p>
 				<p>Note that this example needs support for WebGL, and works best in Google Chrome.</p>
 				<div id="gum" class="nohide">
@@ -41,8 +41,7 @@
 						</ol>
 					</p>
 				</div>
-			</div>
-			<a href="https://github.com/auduno/clmtrackr"><img style="position: absolute; top: 0; left: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_left_green_007200.png" alt="Fork me on GitHub"></a>
+			</div> -->
 			<img id="average" class="masks" src="/media/average.png"></img>
 			<img id="monalisa" class="masks" src="/media/joconde.jpg"></img>
 			<img id="ironman" class="masks" src="/media/ironman.jpg"></img>
@@ -583,6 +582,7 @@ export default {
       },
       currentMask: 0,
       animationRequest: null,
+      stats: new Stats(),
     }
   },
   methods: {
@@ -653,9 +653,9 @@ export default {
         this.adjustVideoProportions()
         this.fd.init(this.webgl_overlay)
         if (this.trackingStarted) {
-          ctrack.stop()
-          ctrack.reset()
-          ctrack.start(vid)
+          this.ctrack.stop()
+          this.ctrack.reset()
+          this.ctrack.start(this.vid)
         }
       }
     },
@@ -762,9 +762,31 @@ export default {
       document
         .getElementById('selectmask')
         .addEventListener('change', this.updateMask, false)
+
+      this.stats.domElement.style.position = 'absolute'
+      this.stats.domElement.style.top = '0px'
+      document.getElementById('container').appendChild(this.stats.domElement)
+
+      document.addEventListener(
+        'clmtrackrIteration',
+        (event) => {
+          this.stats.update()
+        },
+        false
+      )
     },
   },
   mounted() {
+    if (window.location.protocol == 'file:') {
+      alert(
+        'You seem to be running this example directly from a file. Note that these examples only work when served from a server or localhost due to canvas cross-domain restrictions.'
+      )
+    } else if (
+      window.location.hostname !== 'localhost' &&
+      window.location.protocol !== 'https:'
+    ) {
+      window.location.protocol = 'https'
+    }
     this.initialize()
   },
 }
@@ -802,14 +824,11 @@ body {
 
 #container {
   position: relative;
-  width: 370px;
   /*margin : 0px auto;*/
 }
 
 #content {
   margin-top: 70px;
-  margin-left: 100px;
-  margin-right: 100px;
   max-width: 950px;
 }
 
